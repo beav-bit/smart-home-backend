@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Home Dashboard</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    button { padding: 20px 40px; font-size: 20px; margin: 10px; }
+    p { font-weight: bold; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Smart Home Dashboard</h1>
+
+  <div>
+    <h2>Relay 1</h2>
+    <button onclick="controlRelay(1,'on')">ON</button>
+    <button onclick="controlRelay(1,'off')">OFF</button>
+  </div>
+
+  <div>
+    <h2>Relay 2</h2>
+    <button onclick="controlRelay(2,'on')">ON</button>
+    <button onclick="controlRelay(2,'off')">OFF</button>
+  </div>
+
+  <div>
+    <h2>Relay 3</h2>
+    <button onclick="controlRelay(3,'on')">ON</button>
+    <button onclick="controlRelay(3,'off')">OFF</button>
+  </div>
+
+  <p id="status">Loading status...</p>
+
+  <script>
+  // Make controlRelay global
+  const apiKey = 'mySecret123';
+  const baseUrl = window.location.origin;
+
+  window.controlRelay = function(id, action) {
+    fetch(`${baseUrl}/relay/${id}/${action}?key=${apiKey}`)
+      .then(r => r.text())
+      .then(data => {
+        updateStatus(); // immediately refresh status after click
+      })
+      .catch(err => {
+        document.getElementById('status').innerText = "Error: " + err;
+      });
+  }
+
+  function updateStatus() {
+    let statusText = '';
+    for (let i = 1; i <= 3; i++) {
+      fetch(`${baseUrl}/relay/${i}/status`)
+        .then(r => r.text())
+        .then(s => {
+          statusText += `Relay ${i}: ${s}   `;
+          document.getElementById('status').innerText = statusText;
+        })
+        .catch(err => {
+          document.getElementById('status').innerText = "Error fetching status";
+        });
+    }
+  }
+
+  // Poll every 2 seconds
+  setInterval(updateStatus, 2000);
+  updateStatus(); // initial call
+  </script>
+</body>
+</html>
