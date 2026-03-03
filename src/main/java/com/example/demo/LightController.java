@@ -2,38 +2,42 @@ package com.example.demo;
 
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 @RestController
 public class LightController {
 
     private final String apiKey = "mySecret123";
+    private final DeviceWebSocketHandler handler;
 
-    // Store relay states in memory
-    private ConcurrentHashMap<Integer, String> relayStates = new ConcurrentHashMap<>();
-
-    public LightController() {
-        relayStates.put(1, "OFF");
-        relayStates.put(2, "OFF");
-        relayStates.put(3, "OFF");
+    public LightController(DeviceWebSocketHandler handler) {
+        this.handler = handler;
     }
 
-    @GetMapping("/relay/{id}/on")
-    public String turnOn(@PathVariable int id, @RequestParam String key) {
+    @GetMapping("/device/{deviceId}/relay/{relayId}/on")
+    public String turnOn(@PathVariable String deviceId,
+                         @PathVariable int relayId,
+                         @RequestParam String key) throws Exception {
+
         if (!key.equals(apiKey)) return "Unauthorized";
-        relayStates.put(id, "ON");
-        return "Relay " + id + " ON";
+
+        handler.updateRelay(deviceId, relayId, "ON");
+        return "ON";
     }
 
-    @GetMapping("/relay/{id}/off")
-    public String turnOff(@PathVariable int id, @RequestParam String key) {
+    @GetMapping("/device/{deviceId}/relay/{relayId}/off")
+    public String turnOff(@PathVariable String deviceId,
+                          @PathVariable int relayId,
+                          @RequestParam String key) throws Exception {
+
         if (!key.equals(apiKey)) return "Unauthorized";
-        relayStates.put(id, "OFF");
-        return "Relay " + id + " OFF";
+
+        handler.updateRelay(deviceId, relayId, "OFF");
+        return "OFF";
     }
 
-    @GetMapping("/relay/{id}/status")
-    public String getStatus(@PathVariable int id) {
-        return relayStates.getOrDefault(id, "OFF");
+    @GetMapping("/device/{deviceId}/relay/{relayId}/status")
+    public String getStatus(@PathVariable String deviceId,
+                            @PathVariable int relayId) {
+
+        return handler.getRelayState(deviceId, relayId);
     }
 }
